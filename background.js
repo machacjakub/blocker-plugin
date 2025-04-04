@@ -1,57 +1,58 @@
-// Initialize rule counter
-let ruleIdCounter = 1;
+import {
+    generateBlockingRules,
+    getBlockedSites,
+    removeCurrentRules,
+    setNewRules,
+    shouldBeBlockedByTime
+} from "./rulesService.js";
 
-// Function to update blocking rules
-async function updateRules() {
+// Function to update the dynamic declarativeNetRequest rules based on the stored blocked sites.
+/**
+ * @returns {Promise<void>} - A promise that resolves when the rules have been updated.
+ */
+const updateRules = async () => {
+    console.log('THIS SHOULD LOG');
     try {
-        // Get the current blocked sites
-        const { blockedSites = [] } = await chrome.storage.sync.get(['blockedSites']);
+        console.log('UpdateRules initialized');
+        const { blockedSites } = await getBlockedSites();
+        await removeCurrentRules();
 
-        // Remove existing rules
-        const existingRules = await chrome.declarativeNetRequest.getDynamicRules();
-        const existingRuleIds = existingRules.map(rule => rule.id);
-
-        if (existingRuleIds.length > 0) {
-            await chrome.declarativeNetRequest.updateDynamicRules({
-                removeRuleIds: existingRuleIds
-            });
-        }
-
-        // Create new rules for each blocked site
-        const newRules = blockedSites.map((site) => ({
-            id: ruleIdCounter++,
-            priority: 1,
-            action: {
-                type: 'redirect',
-                redirect: {
-                    url: chrome.runtime.getURL('blocked.html')
-                }
-            },
-            condition: {
-                urlFilter: site,
-                resourceTypes: ['main_frame']
-            }
-        }));
-
-        if (newRules.length > 0) {
-            await chrome.declarativeNetRequest.updateDynamicRules({
-                addRules: newRules
-            });
-        }
+        const sitesToBlock = blockedSites.filter(shouldBeBlockedByTime);
+        const newRules = generateBlockingRules(sitesToBlock);
+        await setNewRules(newRules);
+        console.log('Rules successfully updated');
     } catch (error) {
         console.error('Error updating rules:', error);
     }
 }
 
+chrome.action.onClicked.addListener(() => {
+    chrome.tabs.create({ url: chrome.runtime.getURL('options.html') });
+});
+
+// Initial check when the extension starts
+updateRules();
+
+// Initialize rules when the extension is installed or updated
+chrome.runtime.onInstalled.addListener(() => {
+    updateRules();
+});
+
 // Listen for messages from the options page
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, _sender, _sendResponse) => {
     if (message.type === 'UPDATE_RULES') {
         updateRules();
     }
     return true;
 });
 
-// Initialize rules when the extension is installed or updated
-chrome.runtime.onInstalled.addListener(() => {
-    updateRules();
+// Set up a recurring alarm to check the schedule
+chrome.alarms.create('checkBlockingSchedule', {
+    periodInMinutes: 0.1
+});
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+    if (alarm.name === 'checkBlockingSchedule') {
+        updateRules();
+    }
 });

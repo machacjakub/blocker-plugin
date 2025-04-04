@@ -1,27 +1,87 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Website Blocker Options</title>
+    <title>Blocker Options</title>
     <style>
         body {
             padding: 20px;
             font-family: Arial, sans-serif;
         }
+        h2 {
+            margin-top: 36px;
+        }
         .container {
-            max-width: 500px;
+            width: 400px;
+            max-width: 80vw;
             margin: 0 auto;
         }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        input {
+            /* Remove default styles */
+            background-color: transparent;
+            appearance: none;
+            border: none;
+            font-family: inherit;
+            line-height: 1.5;
+            margin: 0;
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid #acacac;
+        }
+        input:focus {
+            outline: none;
+            border-color: rgba(44, 135, 90, 0.6);
+            box-shadow: 0 0 0 2px rgba(44, 135, 90, 0.25);
+        }
         input[type="text"] {
-            width: 70%;
+            width: calc(400px - 16px);
+            max-width: calc(80vw - 16px);
             padding: 8px;
-            margin-right: 10px;
+        }
+        input[type="time"] {
+            width: min(160px, 30vw);
+            box-sizing: border-box;
+        }
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+        }
+        input[type="time"]::-webkit-inner-spin-button,
+        input[type="time"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0; /* remove extra space */
+        }
+        input[type="time"]::-moz-focus-inner {
+            border: 0; /* Firefox reset */
+            padding: 0;
+        }
+        .inputs {
+            width: 400px;
+            max-width: 80vw;
+            display: flex;
+            gap: 20px;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .label-input-wrapper {
+            display: flex;
+            flex-direction: column;
+        }
+        label{
+            color: rgba(44, 135, 90);
         }
         button {
             padding: 8px 15px;
-            background-color: #4CAF50;
+            background-color: #2c875a;
             color: white;
             border: none;
+            border-radius: 8px;
             cursor: pointer;
+        }
+        #addWebsite:hover {
+            background-color: #3d9e6e;
         }
         ul {
             list-style-type: none;
@@ -29,26 +89,59 @@
         }
         li {
             display: flex;
+            font-size: 0.9rem;
             justify-content: space-between;
             align-items: center;
             padding: 8px;
             border-bottom: 1px solid #ddd;
         }
+        .url-time-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 320px;
+        }
+        .url {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .url-ellipsis {
+            width: 190px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .time {
+            width: 90px;
+            color: gray;
+        }
         .delete-btn {
-            background-color: #f44336;
+            background-color: transparent;
+            padding: 0;
+        }
+        .delete-svg:hover {
+            padding: 0;
+            box-shadow: 0 0 0 2px rgba(187, 85, 85, 0.25);
+            border-radius: 50%;
         }
     </style>
 </head>
 <body>
 <div class="container">
-    <h1>Website Blocker Options</h1>
-    <div>
-        <input type="text" id="websiteInput" placeholder="Enter website URL (e.g., facebook.com)">
+    <h1>BlockO'Clock</h1>
+    <h2>Add new rule</h2>
+    <form>
+        <div class="label-input-wrapper"><label for="urlInput">URL</label><input type="text" id="urlInput" placeholder="Enter website URL (e.g., facebook.com)"></div>
+        <div class="inputs">
+            <div class="label-input-wrapper"><label for="timeFromInput">From</label><input type="time" id="timeFromInput"/></div>
+            <div class="label-input-wrapper"><label for="timeToInput">To</label><input type="time" id="timeToInput"/></div>
+        </div>
         <button id="addWebsite">Add Website</button>
-    </div>
-    <h2>Blocked Websites:</h2>
+    </form>
+    <h2>Blocked Websites</h2>
     <ul id="websiteList"></ul>
 </div>
-<script src="options.js"></script>
+<script src="options.js" type="module"></script>
 </body>
 </html>

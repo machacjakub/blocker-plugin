@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "The Website Blocker",
-    "version": "1.2",
+    "version": "1.0.0",
     "description": "Blocks specified websites",
     "icons": {
         "16": "icons/icon.png",
@@ -10,23 +10,25 @@
         "128": "icons/icon.png"
     },
     "action": {
-        "default_popup": "popup.html",
         "default_icon": {
             "16": "icons/icon.png",
             "32": "icons/icon.png",
             "48": "icons/icon.png",
             "128": "icons/icon.png"
-        }
+        },
+        "default_title": "BlockO'Clock"
     },
     "permissions": [
         "storage",
-        "declarativeNetRequest"
+        "declarativeNetRequest",
+        "alarms"
     ],
     "host_permissions": [
         "<all_urls>"
     ],
     "background": {
-        "service_worker": "background.js"
+        "service_worker": "background.js",
+        "type": "module"
     },
     "options_page": "options.html"
 }
