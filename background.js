@@ -11,14 +11,35 @@ import {
  * @returns {Promise<void>} - A promise that resolves when the rules have been updated.
  */
 const updateRules = async () => {
-    console.log('THIS SHOULD LOG');
     try {
-        console.log('UpdateRules initialized');
         const { blockedSites } = await getBlockedSites();
+        console.log('All blocked sites:', blockedSites);
         await removeCurrentRules();
 
-        const sitesToBlock = blockedSites.filter(shouldBeBlockedByTime);
+        // Clear expired pauses
+        const now = Date.now();
+        let hasExpiredPauses = false;
+        const updatedSites = blockedSites.map(site => {
+            if (site.pauseUntil && site.pauseUntil <= now) {
+                hasExpiredPauses = true;
+                const { pauseUntil, pauseReason, paused, ...rest } = site;
+                return rest;
+            }
+            return site;
+        });
+
+        // Save updated sites if any pauses expired
+        if (hasExpiredPauses) {
+            await chrome.storage.sync.set({ blockedSites: updatedSites });
+        }
+
+            // Exclude paused sites first, then filter by time
+            const nowTs = Date.now();
+            const unpausedSites = (hasExpiredPauses ? updatedSites : blockedSites).filter(site => !(site.pauseUntil && site.pauseUntil > nowTs));
+            const sitesToBlock = unpausedSites.filter(shouldBeBlockedByTime);
+        console.log('Sites to block (after time filter):', sitesToBlock);
         const newRules = generateBlockingRules(sitesToBlock);
+        console.log('New rules generated:', newRules);
         await setNewRules(newRules);
         console.log('Rules successfully updated');
     } catch (error) {

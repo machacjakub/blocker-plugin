@@ -1,77 +1,82 @@
-// Function to determine if the current time falls within a specified blocking time range.
 /**
- * @param {{timeFrom: string, timeTo: string}} site - An object containing the start and end times (hours) for blocking.
- * @returns {boolean} - Returns true if the current time is within the blocking time range, false otherwise.
+ * Determines if the current time falls within a specified blocking time range.
+ * @param {{ timeFrom: string, timeTo: string }} site - An object containing the start and end times (HH:mm) for blocking.
+ * @returns {boolean} Returns true if the current time is within the blocking time range, false otherwise.
  */
-export const shouldBeBlockedByTime = ({timeFrom, timeTo}) => {
-    console.log('ShouldBeBlockedByTime initialized');
+export function shouldBeBlockedByTime({ timeFrom, timeTo }) {
     const now = new Date();
-    const hour = now.getHours();
-    const minutes = now.getMinutes();
-    const minutesNow = hour*60 + minutes;
-    const arrayFrom = timeFrom.split(':');
-    const arrayTo = timeTo.split(':');
-    const minutesFrom = Number(arrayFrom[0])*60 + Number(arrayFrom[1]);
-    const minutesTo = Number(arrayTo[0])*60 + Number(arrayTo[1]);
-    console.log('SHOULD BE BLOCKED??? ', minutesFrom, minutesNow, minutesTo);
-    if(minutesFrom > minutesTo) {
+    const minutesNow = now.getHours() * 60 + now.getMinutes();
+    const [fromHour, fromMinute] = timeFrom.split(":").map(Number);
+    const [toHour, toMinute] = timeTo.split(":").map(Number);
+    const minutesFrom = fromHour * 60 + fromMinute;
+    const minutesTo = toHour * 60 + toMinute;
+    // Handles overnight ranges (e.g., 22:00-06:00)
+    if (minutesFrom > minutesTo) {
         return minutesNow >= minutesFrom || minutesNow <= minutesTo;
     }
-
     return minutesNow >= minutesFrom && minutesNow <= minutesTo;
 }
 
-// Function to generate the blocking rules
 /**
- * @param {{id: number, url: string}[]} sites - An array of website URLs to be blocked.
- * @returns {{id: *, priority: number, action: {type: string, redirect: {url: *}}, condition: {urlFilter: *, resourceTypes: [string]}}[]} An array of declarativeNetRequest rule objects.
+ * Generates Chrome declarativeNetRequest rules for the given sites.
+ * @param {{ id: number, url: string, paused?: boolean, pauseUntil?: number }[]} sites - Array of sites to block.
+ * @returns {Array<{ id: number, priority: number, action: { type: string, redirect: { url: string } }, condition: { urlFilter: string, resourceTypes: string[] } }>} Array of rule objects.
  */
-export const generateBlockingRules = (sites) => {
-    return sites.map((site) => ({
-        id: site.id,
-        priority: 1,
-        action: {
-            type: 'redirect',
-            redirect: {
-                url: chrome.runtime.getURL('blocked.html')
+export function generateBlockingRules(sites) {
+    const now = Date.now();
+    return sites
+        .filter(site => {
+            // Skip if paused and pause hasn't expired
+            if (site.pauseUntil && site.pauseUntil > now) {
+                return false;
             }
-        },
-        condition: {
-            urlFilter: site.url,
-            resourceTypes: ['main_frame'],
-        }
-    }));
+            return true;
+        })
+        .map(site => ({
+            id: site.id,
+            priority: 1,
+            action: {
+                type: 'redirect',
+                redirect: {
+                    url: chrome.runtime.getURL('blocked.html'),
+                },
+            },
+            condition: {
+                urlFilter: site.url,
+                resourceTypes: ['main_frame'],
+            },
+        }));
 }
 
-// Function to retrieve blocked sites from storage.
 /**
- * @returns {Promise<{ blockedSites?: {id: number, url: string, timeFrom: string, timeTo: string}[] }>} - A promise resolving to an object containing an array of blocked site URLs.
+ * Retrieves blocked sites from Chrome storage.
+ * @returns {Promise<{ blockedSites?: { id: number, url: string, timeFrom: string, timeTo: string }[] }>} Promise resolving to an object containing blockedSites array.
  */
-export const getBlockedSites = async () => await chrome.storage.sync.get(['blockedSites']);
+export async function getBlockedSites() {
+    return await chrome.storage.sync.get(['blockedSites']);
+}
 
-// Function to remove declarativeNetRequest rules based on IDs derived from blocked sites (though the ID extraction might be incorrect).
 /**
- * @returns {Promise<void>} - A promise that resolves when the specified rules have been removed.
+ * Removes current declarativeNetRequest rules based on blocked site IDs.
+ * @returns {Promise<void>} Promise that resolves when rules are removed.
  */
-export const removeCurrentRules =  async () => {
+export async function removeCurrentRules() {
     const { blockedSites = [] } = await getBlockedSites();
     const existingRuleIds = blockedSites.map(site => site.id);
-    console.log('Removing old ids: ', existingRuleIds)
     await chrome.declarativeNetRequest.updateDynamicRules({
-        removeRuleIds: existingRuleIds
+        removeRuleIds: existingRuleIds,
     });
 }
 
-// Function to add new declarativeNetRequest rules.
 /**
- * @param {{id: *, priority: number, action: {type: string, redirect: {url: *}}, condition: {urlFilter: *, resourceTypes: string[]}}[]} newRules - An array of new declarativeNetRequest rule objects to be added.
- * @returns {Promise<void>} - A promise that resolves when the new rules have been added.
+ * Adds new declarativeNetRequest rules.
+ * @param {Array<{ id: number, priority: number, action: { type: string, redirect: { url: string } }, condition: { urlFilter: string, resourceTypes: string[] } }>} newRules - Array of new rule objects to add.
+ * @returns {Promise<void>} Promise that resolves when new rules are added.
  */
-export const setNewRules = async (newRules)=> {
+export async function setNewRules(newRules) {
     if (newRules.length > 0) {
-        console.log('Adding new rules ', newRules);
         await chrome.declarativeNetRequest.updateDynamicRules({
-            addRules: newRules
+            addRules: newRules,
         });
     }
 }

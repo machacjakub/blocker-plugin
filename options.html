@@ -125,6 +125,72 @@
             box-shadow: 0 0 0 2px rgba(187, 85, 85, 0.25);
             border-radius: 50%;
         }
+        .pause-btn {
+            background-color: transparent;
+            padding: 0;
+        }
+        .pause-svg:hover {
+            padding: 0;
+            box-shadow: 0 0 0 2px rgba(187, 85, 85, 0.25);
+            border-radius: 50%;
+        }
+        .pause-form {
+            padding: 12px;
+            background-color: white;
+            border-radius: 4px;
+            margin-top: 8px;
+        }
+        .pause-form-content {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .pause-form label {
+            font-size: 0.9em;
+            color: #2c875a;
+            margin-top: 4px;
+        }
+        .duration-select, .reason-input {
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .reason-input {
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .form-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .form-submit, .form-cancel {
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .form-submit {
+            background-color: #2c875a;
+            color: white;
+            border: none;
+        }
+        .form-submit:hover {
+            background-color: #3d9e6e;
+        }
+        .form-cancel {
+            background-color: #ddd;
+            color: #333;
+            border: none;
+        }
+        .form-cancel:hover {
+            background-color: #ccc;
+        }
+        .pause-info {
+            color: #2c875a;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 <body>
@@ -143,5 +209,8 @@
     <ul id="websiteList"></ul>
 </div>
 <script src="options.js" type="module"></script>
+<div style="position: fixed; right: 12px; bottom: 8px; font-size: 0.8em; color: #888; opacity: 0.8; z-index: 1000; pointer-events: none;">
+  v0.2.1
+</div>
 </body>
 </html>
